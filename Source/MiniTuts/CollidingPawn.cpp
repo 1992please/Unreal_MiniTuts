@@ -2,7 +2,7 @@
 
 #include "MiniTuts.h"
 #include "CollidingPawn.h"
-
+#include "CollidingPawnMovementComponent.h"
 
 // Sets default values
 ACollidingPawn::ACollidingPawn()
@@ -50,6 +50,9 @@ ACollidingPawn::ACollidingPawn()
 	UCameraComponent* Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("ActualCamera"));
 	Camera->AttachTo(SpringArm, USpringArmComponent::SocketName);
 
+	//Create an instance of our movement component, and tell it to update the root
+	OurMovementComponent = CreateDefaultSubobject<UCollidingPawnMovementComponent>(TEXT("CustomMovementComponent"));
+	OurMovementComponent->UpdatedComponent = RootComponent;
 	// Take control of the default player
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 }
@@ -73,5 +76,44 @@ void ACollidingPawn::SetupPlayerInputComponent(class UInputComponent* InputCompo
 {
 	Super::SetupPlayerInputComponent(InputComponent);
 
+	InputComponent->BindAction("Space",EInputEvent::IE_Pressed, this, &ACollidingPawn::ParticleToggle);
+	InputComponent->BindAxis("MoveForward", this, &ACollidingPawn::MoveForward);
+	InputComponent->BindAxis("MoveRight", this, &ACollidingPawn::MoveRight);
+	InputComponent->BindAxis("Turn", this, &ACollidingPawn::Turn);
 }
 
+UPawnMovementComponent* ACollidingPawn::GetMovementComponent() const
+{
+	return OurMovementComponent;
+}
+
+void ACollidingPawn::MoveForward(float AxisValue)
+{
+	if (OurMovementComponent && (OurMovementComponent->UpdatedComponent == RootComponent))
+	{
+		OurMovementComponent->AddInputVector(GetActorForwardVector() * AxisValue);
+	}
+}
+
+void ACollidingPawn::MoveRight(float AxisValue)
+{
+	if (OurMovementComponent && OurMovementComponent->UpdatedComponent == RootComponent)
+	{
+		OurMovementComponent->AddInputVector(GetActorRightVector() * AxisValue);
+	}
+}
+
+void ACollidingPawn::Turn(float AxisValue)
+{
+	FRotator NewRotation = GetActorRotation();
+	NewRotation.Yaw += AxisValue;
+	SetActorRotation(NewRotation);
+}
+
+void ACollidingPawn::ParticleToggle()
+{
+	if (OurParticleSystem && OurParticleSystem->Template)
+	{
+		OurParticleSystem->ToggleActive();
+	}
+}

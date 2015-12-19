@@ -20,8 +20,19 @@ public:
 	// Called every frame
 	virtual void Tick( float DeltaSeconds ) override;
 
+	// return our custome movement component
+	virtual UPawnMovementComponent* GetMovementComponent() const override;
+
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
 
 	UParticleSystemComponent* OurParticleSystem;
+	
+	class UCollidingPawnMovementComponent* OurMovementComponent;
+
+private:
+	void MoveForward(float AxisValue);
+	void MoveRight(float AxisValue);
+	void Turn(float AxisValue);
+	void ParticleToggle();
 };
